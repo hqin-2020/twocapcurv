@@ -522,32 +522,43 @@ function dstar_twocapitals!(d1::Array{Float64,2},
     alpha = model.t1.alpha; 
     zeta = model.k1.zeta;
     kappa = model.k1.kappa;
+    delta = model.k1.delta;
     phi1 = model.t1.phi;
     phi2 = model.t2.phi;
 
     for i=1:IJ
         p, vr = pii[i], Vr[i]
+        k1a = (1-zeta + zeta*exp.(p*(1-kappa))).^(1/(kappa-1));
+        k2a = ((1-zeta)*exp.(p*(kappa-1)) + zeta).^(1/(kappa-1));
         
-        k1a = (1-zeta + zeta*exp.(p)^(1-kappa))^(1/(kappa-1));
-        k2a = ((1-zeta)*exp.(p)^(kappa-1) + zeta)^(1/(kappa-1));
+        function f(d1x)
+            d2_temp = ((1-zeta)*(k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*exp.(V[i]*(rho-1))*k1a)).^rho;
+            d2x = (alpha - d1x*k1a-d2_temp)/k2a;
+            return (zeta*k2a^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1))*k1a)*(alpha - d1x*k1a-d2x*k2a).^(-rho)*k2a
+        end
+        x0 = 0.03/2;
+        d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 1000000, strict = true);
+        d2y = ((1-zeta)*(k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root))/(delta*exp.(V[i]*(rho-1))*k1a)).^rho;
+        d2_root = (alpha - d1_root*k1a-d2y)/k2a;
+        d1[i] = d1_root;
+        d2[i] = d2_root;
+        # d1old = copy(d1[i]);
+        # d2old = copy(d2[i]);
+        # if d1old<0
+        #     d1old = 0.001;
+        # end
+        # if d2old<0
+        #     d2old = 0.001;
+        # end
 
-        d1old = copy(d1[i]);
-        d2old = copy(d2[i]);
-        if d1old<0
-            d1old = 0.001;
-        end
-        if d2old<0
-            d2old = 0.001;
-        end
-
-        c = alpha - d1old*k1a - d2old*k2a;
-        if c<0
-            c= 0.001
-        end
-        d1new_temp = ((1-zeta)*k1a^(1-kappa)-Vr[i]) / (delta*(exp.(rho-1)*V[i])*c^(-rho)*k1a);
-        d1new = (d1new_temp-1)/phi1;
-        d2new_temp = (zeta*k2a^(1-kappa)+Vr[i]) / (delta*(exp.(rho-1)*V[i])*c^(-rho)*k2a);
-        d2new = (d2new_temp-1)/phi2;
+        # c = alpha - d1old*k1a - d2old*k2a;
+        # if c<0
+        #     c= 0.001
+        # end
+        # d1new_temp = ((1-zeta)*k1a^(1-kappa)-Vr[i]) / (delta*(exp.(rho-1)*V[i])*c^(-rho)*k1a);
+        # d1new = (d1new_temp-1)/phi1;
+        # d2new_temp = (zeta*k2a^(1-kappa)+Vr[i]) / (delta*(exp.(rho-1)*V[i])*c^(-rho)*k2a);
+        # d2new = (d2new_temp-1)/phi2;
         # if d1new<0
         #     d1new = 0.001;
         # end
@@ -568,20 +579,20 @@ function dstar_twocapitals!(d1::Array{Float64,2},
         #     d2new = 0.001;
         # end
 
-        d1_temp = d1new * fraction + d1old *(1-fraction);
-        d2_temp = d2new * fraction + d2old *(1-fraction);
+        # d1_temp = d1new * fraction + d1old *(1-fraction);
+        # d2_temp = d2new * fraction + d2old *(1-fraction);
         # d1[i] = d1_temp;
         # d2[i] = d2_temp;
-        if d1_temp<0
-            d1[i] = 0.001;
-        else
-            d1[i] = d1_temp;
-        end
-        if d2_temp<0
-            d2[i] = 0.001;
-        else
-            d2[i] = d2_temp;
-        end
+        # if d1_temp<0
+        #     d1[i] = 0.001;
+        # else
+        #     d1[i] = d1_temp;
+        # end
+        # if d2_temp<0
+        #     d2[i] = 0.001;
+        # else
+        #     d2[i] = d2_temp;
+        # end
         
         # if d1_temp*k1a>alpha*0.36
         #     d1[i] = alpha*0.36/k1a-0.001;
@@ -659,22 +670,21 @@ function drifts!(mu_1::Array{Float64, 2},
 
     for i=1:IJ
         p, z = pii[i], zz[i];
-
-        k1a = (1-zeta + zeta*exp.(p)^(1-kappa))^(1/(kappa-1));
-        k2a = ((1-zeta)*exp.(p)^(kappa-1) + zeta)^(1/(kappa-1));
-
-        dkadk1dk1 = (kappa-1) * ((1-zeta)^2*(k1a)^(-2*kappa+2) - kappa/(kappa-1)*(1-zeta)*(k1a)^(-kappa+1));
-        dkadk1dk2 = (kappa-1) * zeta*(1-zeta)*(k1a)^(-kappa+1)*(k2a)^(-kappa+1);
-        dkadk2dk2 = (kappa-1) * (zeta^2*(k2a)^(-2*kappa+2) - kappa/(kappa-1)*(1-zeta)*(k2a)^(-kappa+1));
+        k1a = (1-zeta + zeta*exp.(p*(1-kappa))).^(1/(kappa-1));
+        k2a = ((1-zeta)*exp.(p*(kappa-1)) + zeta).^(1/(kappa-1));
+        
+        dkadk1dk1 = (kappa-1) * ((1-zeta).^2*(k1a).^(-2*kappa+2) - kappa/(kappa-1)*(1-zeta)*(k1a).^(-kappa+1));
+        dkadk1dk2 = (kappa-1) * zeta*(1-zeta)*(k1a).^(-kappa+1)*(k2a).^(-kappa+1);
+        dkadk2dk2 = (kappa-1) * (zeta.^2*(k2a).^(-2*kappa+2) - kappa/(kappa-1)*(1-zeta)*(k2a).^(-kappa+1));
 
         mu_k1 = 1/phi1 * log(1+phi1*d1[i]) + beta1*z - eta1;
         mu_k2 = 1/phi2 * log(1+phi2*d2[i]) + beta2*z - eta2;
 
-        mu_r[i] = mu_k2 - mu_k1 - (1/2)*(dot(s_k2,s_k2) - dot(s_k1,s_k1)) # B_1 in CPP
+        mu_r[i] = mu_k2 - mu_k1 - (1/2)*(dot(s_k2,s_k2) - dot(s_k1,s_k1)) 
 
-        mu_1[i] = mu_k1*(1-zeta)*(k1a)^(1-kappa)+
-                    mu_k2*(zeta)*(k2a)^(1-kappa)+
-                    1/2*(dot(s_k1,s_k1)*dkadk1dk1 + dot(s_k2,s_k2)*dkadk2dk2 + 2*dot(s_k1,s_k2)*dkadk1dk2)  # D in CPP
+        mu_1[i] = mu_k1*(1-zeta)*(k1a).^(1-kappa)+
+                    mu_k2*(zeta)*(k2a).^(1-kappa)+
+                    1/2*(dot(s_k1,s_k1)*dkadk1dk1 + dot(s_k2,s_k2)*dkadk2dk2 + 2*dot(s_k1,s_k2)*dkadk1dk2)  
     end
 
     nothing
@@ -697,11 +707,10 @@ function drifts_distortion!(h::Array{Float64, 2},
 
     for i=1:IJ
         p = pii[i];
+        k1a = (1-zeta + zeta*exp.(p*(1-kappa))).^(1/(kappa-1));
+        k2a = ((1-zeta)*exp.(p*(kappa-1)) + zeta).^(1/(kappa-1));
 
-        k1a = (1-zeta + zeta*exp.(p)^(1-kappa))^(1/(kappa-1));
-        k2a = ((1-zeta)*exp.(p)^(kappa-1) + zeta)^(1/(kappa-1));
-
-        h[i] = (s_k1*(1-zeta)*(k1a)^(1-kappa) + s_k2*(zeta)*(k2a)^(1-kappa) + (s_k2-s_k1)*Vr[i]) + s_z*Vz[i];
+        h[i] = (s_k1*(1-zeta)*(k1a).^(1-kappa) + s_k2*(zeta)*(k2a).^(1-kappa) + (s_k2-s_k1)*Vr[i]) + s_z*Vz[i];
     end
 
     nothing
@@ -730,16 +739,16 @@ function create_uu!(uu::Array{Float64, 1},
 
     for i=1:IJ
         p, z = pii[i], zz[i]
+        k1a = (1-zeta + zeta*exp.(p*(1-kappa))).^(1/(kappa-1));
+        k2a = ((1-zeta)*exp.(p*(kappa-1)) + zeta).^(1/(kappa-1));
 
-        k1a = (1-zeta + zeta*exp.(p)^(1-kappa))^(1/(kappa-1));
-        k2a = ((1-zeta)*exp.(p)^(kappa-1) + zeta)^(1/(kappa-1));
         c = alpha - d1[i]*k1a - d2[i]*k2a;
-        if c<0
-            c= 0.001
-        end
+        # if c<0
+        #     c= 0.001
+        # end
         penalty_term = (1-gamma)*(h1[i]^2 + h2[i]^2 + hz[i]^2)/2;
 
-        uu[i] = (delta/(1-rho)*(c^(1-rho)*exp.((rho-1)*V[i])-1)+ penalty_term + mu_1[i]);
+        uu[i] = (delta/(1-rho)*(c.^(1-rho)*exp.((rho-1)*V[i])-1)+ penalty_term + mu_1[i]);
     end
 
     nothing
@@ -847,9 +856,14 @@ function value_function_twocapitals(gamma::Float64,
       dz = (zmax - zmin)/(JJ-1);
       dr2, dz2, drdz = dr*dr, dz*dz, dr*dz;
 
+      println("rmax = ", rmax, ", rmin = ",rmin, ", rlength = ", II)
+      println("zmax = ", zmax, ", zmin = ",zmin, ", zlength = ", JJ)
+
       rr = r * ones(1, JJ);
       zz = ones(II, 1) * z;
       pii = rr;
+    #   k1a = (1-zeta + zeta*exp.(p*(1-kappa))).^(1/(kappa-1));
+    #   k2a = ((1-zeta)*exp.(p((kappa-1))) + zeta).^(1/(kappa-1));
 
       #========================================================================#
       # Storing matrices
@@ -976,7 +990,12 @@ function value_function_twocapitals(gamma::Float64,
 
 
 	      # FLOW TERM
-          create_uu!(uu, gamma, rho, d1, d2, h1, h2, hz, mu_1, pii, zz, IJ, V, model);
+          if symmetric==1
+            create_uu!(uu, gamma, rho, d1_F, d2_F, h1_F, h2_F, hz_F, mu_1_F, pii, zz, IJ, V, model);
+        elseif symmetric==0
+            create_uu!(uu, gamma, rho, d1, d2, h1, h2, hz, mu_1, pii, zz, IJ, V, model);
+        end
+          
 
           #CONSTRUCT MATRIX A
           a_1 = ones(II, JJ)*t2;
@@ -1055,7 +1074,7 @@ function value_function_twocapitals(gamma::Float64,
     val = v[II_half, JJ_half];     # Value at (r_0, z_0)  (objective)
 
     return A, v,val, d1_F, d2_F, d1_B, d2_B, h1_F, h2_F, hz_F, h1_B, h2_B, hz_B,
-           mu_1_F, mu_1_B, mu_r_F, mu_r_B, mu_z, V0, rr, zz, pii, dr, dz;
+           mu_1_F, mu_1_B, mu_r_F, mu_r_B, mu_z, c, V0, rr, zz, pii, dr, dz;
 end
 
 

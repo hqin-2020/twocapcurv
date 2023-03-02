@@ -206,7 +206,7 @@ plt.close()
 res = npz
 W1 = trans(np.linspace(-llim,llim,lgrid))
 W2 = np.linspace(-1,1,201)
-var_name = ['Investment over Capital', 'Consumption over Capital', 'Log Value Function']
+var_name = ['Investment over Capital', 'Consumption over Ka', 'Log Value Function']
 
 
 plot_row_dims      = 1

@@ -1,21 +1,21 @@
 #! /bin/bash
 
 # Deltaarray=(0.005 0.001 0.01 0.1 1)
-Deltaarray=(300)
+Deltaarray=(10 300)
 fractionarray=(0.0)
 
 actiontime=1
 
-julia_name="newsets_twocapitals_rho.jl"
+julia_name="newsets_twocapitals_curv.jl"
 python_name="plot_rho_3d.py"
 
-rhoarray=(0.7 0.8 0.9 1.00001 1.1 1.2 1.3 1.4 1.5)
-# rhoarray=(1.00001)
+# rhoarray=(0.7 0.8 0.9 1.00001 1.1 1.2 1.3 1.4 1.5)
+rhoarray=(1.00001 1.1 1.5)
 
-gammaarray=(1.01 2.0 3.0 4.0 5.0 6.0 7.0 8.0)
+# gammaarray=(1.01 2.0 3.0 4.0 5.0 6.0 7.0 8.0)
+gammaarray=(8.0)
 
 symmetric=1
-alpha_z_tilde_ex=-0.005
 
 for Delta in ${Deltaarray[@]}; do
     for fraction in "${fractionarray[@]}"; do
@@ -23,7 +23,7 @@ for Delta in ${Deltaarray[@]}; do
             for gamma in "${gammaarray[@]}"; do
                     count=0
 
-                    action_name="Standard_grid_sym_xi_nonzero_Delta_300"
+                    action_name="Standard_grid_sym_Delta_test"
 
                     dataname="${action_name}_${Delta}_frac_${fraction}"
 
@@ -52,8 +52,8 @@ for Delta in ${Deltaarray[@]}; do
 
 module load julia/1.7.3
 module load python/anaconda-2020.11
-srun julia /project/lhansen/twocaprho/$julia_name  --Delta ${Delta} --fraction ${fraction} --gamma ${gamma} --rho ${rho} --symmetric ${symmetric} --alpha_z_tilde_ex ${alpha_z_tilde_ex} --dataname ${dataname} 
-python3 /project/lhansen/twocaprho/$python_name  --Delta ${Delta} --fraction ${fraction} --gamma ${gamma} --rho ${rho} --symmetric ${symmetric} --dataname ${dataname}
+srun julia /project/lhansen/twocapcurv/$julia_name  --Delta ${Delta} --fraction ${fraction} --gamma ${gamma} --rho ${rho} --symmetric ${symmetric} --dataname ${dataname} 
+python3 /project/lhansen/twocapcurv/$python_name  --Delta ${Delta} --fraction ${fraction} --gamma ${gamma} --rho ${rho} --symmetric ${symmetric} --dataname ${dataname}
 EOF
                 count=$(($count + 1))
                 sbatch ./bash/${action_name}/Delta_${Delta}_frac_${fraction}/rho_${rho}_gamma_${gamma}.sh

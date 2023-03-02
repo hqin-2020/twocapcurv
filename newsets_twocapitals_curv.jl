@@ -32,7 +32,11 @@ function parse_commandline()
         "--Delta"
             help = "Delta"
             arg_type = Float64
-            default = 1000.   
+            default = 1000.  
+        "--symmetric"
+            help = "symmetric"
+            arg_type = Int
+            default = 0
         "--dataname"
             help = "dataname"
             arg_type = String
@@ -49,17 +53,18 @@ gamma                = parsed_args["gamma"]
 rho                  = parsed_args["rho"]
 fraction             = parsed_args["fraction"]
 Delta                = parsed_args["Delta"]
+symmetric            = parsed_args["symmetric"]
 dataname             = parsed_args["dataname"]
 
-symmetric_returns    = 1
+symmetric_returns    = symmetric
 state_dependent_xi   = 0
 optimize_over_ell    = 0
 compute_irfs         = 0                    # need to start julia with "-p 5"
 
 if compute_irfs == 1
-    @everywhere include("newsets_utils_modif.jl")
+    @everywhere include("newsets_utils_curv.jl")
 elseif compute_irfs ==0
-    include("newsets_utils_modif.jl")
+    include("newsets_utils_curv.jl")
 end
 
 println("=============================================================")
@@ -89,8 +94,8 @@ elseif symmetric_returns == 0
     end
 end
 
-
-filename_ell = "./output/"*dataname*"/"
+filename_ell = "./output/"*dataname*"/gamma_"*string(gamma)*"_rho_"*string(rho)*"/"
+isdir(filename_ell) || mkpath(filename_ell)
 
 #==============================================================================#
 #  PARAMETERS
@@ -119,13 +124,13 @@ phi2 = 28.0
 
 # (3) GRID
 II, JJ = 1001, 201;
-rmax =  log(20);
-rmin = -log(20); 
+rmax = 20.;#log(20);
+rmin = -20.;#-log(20); 
 zmax = 1.;
 zmin = -zmax;
 
 # (4) Iteration parameters
-maxit = 500000;        # maximum number of iterations in the HJB loop
+maxit = 50000;        # maximum number of iterations in the HJB loop
 crit  = 10e-6;      # criterion HJB loop
 # Delta = 1000.;      # delta in HJB algorithm
 
@@ -145,11 +150,13 @@ params = FinDiffMethod(maxit, crit, Delta);
 #==============================================================================#
 
 println(" (3) Compute value function WITH ROBUSTNESS")
+times = @elapsed begin
 A, V, val, d1_F, d2_F, d1_B, d2_B, h1_F, h2_F, hz_F, h1_B, h2_B, hz_B,
-        mu_1_F, mu_1_B, mu_r_F, mu_r_B, mu_z, V0, rr, zz, pii, dr, dz =
+        mu_1_F, mu_1_B, mu_r_F, mu_r_B, mu_z, c, V0, rr, zz, pii, dr, dz =
         value_function_twocapitals(gamma, rho, fraction, model, grid, params, symmetric_returns);
 println("=============================================================")
-
+println("Convegence time (minutes): ", times/60)
+end
 g_dist, g = stationary_distribution(A, grid)
 
 # Define Policies object
@@ -170,11 +177,11 @@ d1 = (policies.d1_F + policies.d1_B)/2;
 d2 = (policies.d2_F + policies.d2_B)/2;
 h1, h2, hz = -h1_dist, -h2_dist, -hz_dist;
 
-CSV.write(filename_ell*"d1.csv",  Tables.table(d1), writeheader=false)
-CSV.write(filename_ell*"d2.csv",  Tables.table(d2), writeheader=false)
-CSV.write(filename_ell*"h1.csv",  Tables.table(h1), writeheader=false)
-CSV.write(filename_ell*"h2.csv",  Tables.table(h2), writeheader=false)
-CSV.write(filename_ell*"hz.csv",  Tables.table(hz), writeheader=false)
+# CSV.write(filename_ell*"d1.csv",  Tables.table(d1), writeheader=false)
+# CSV.write(filename_ell*"d2.csv",  Tables.table(d2), writeheader=false)
+# CSV.write(filename_ell*"h1.csv",  Tables.table(h1), writeheader=false)
+# CSV.write(filename_ell*"h2.csv",  Tables.table(h2), writeheader=false)
+# CSV.write(filename_ell*"hz.csv",  Tables.table(hz), writeheader=false)
 
 results = Dict("delta" => delta,
 # Two capital stocks
@@ -184,18 +191,15 @@ results = Dict("delta" => delta,
 "sigma_z" =>  sigma_z, "alpha" => alpha, "kappa" => kappa,"zeta" => zeta, "phi1" => phi1, "phi2" => phi2,
 "I" => II, "J" => JJ,
 "rmax" => rmax, "rmin" => rmin, "zmax" => zmax, "zmin" => zmin,
-"rr" => rr, "zz" => zz, "pii" => pii, "dr" => dr, "dz" => dz, "T" => hor,
-"maxit" => maxit, "crit" => crit, "Delta" => Delta, "inner" => inner,
+"rr" => rr, "zz" => zz, "pii" => pii, "dr" => dr, "dz" => dz,
+"maxit" => maxit, "crit" => crit, "Delta" => Delta,
 "g_dist" => g_dist, "g" => g,
+"cons" => c,
 # Robust control under baseline
 "V0" => V0, "V" => V, "val" => val, "gamma" => gamma,"rho" => rho,
-"d1_F" => d1_F, "d2_F" => d2_F,
-"d1_B" => d1_B, "d2_B" => d2_B,
 "d1" => d1, "d2" => d2,
-"h1_F" => policies.h1_F, "h2_F" => policies.h2_F, "hz_F" => policies.hz_F,
-"h1_B" => policies.h1_B, "h2_B" => policies.h2_B, "hz_B" => policies.hz_B,
-"h1_dist" => h1_dist, "h2_dist" => h2_dist, "hz_dist" => hz_dist,
 "h1" => h1, "h2" => h2, "hz" => hz,
+"times" => times,
 "mu_1" => mu_1, "mu_r" => mu_r, "mu_z" => mu_z)
 
 npzwrite(filename_ell*filename, results)
