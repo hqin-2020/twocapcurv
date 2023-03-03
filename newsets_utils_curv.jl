@@ -531,24 +531,22 @@ function dstar_twocapitals!(d1::Array{Float64,2},
         k1a = (1-zeta + zeta*exp.(p*(1-kappa))).^(1/(kappa-1));
         k2a = ((1-zeta)*exp.(p*(kappa-1)) + zeta).^(1/(kappa-1));
         
+        c_slope = ((1-zeta)*k1a.^(1-kappa)-Vr[i])
+        i2_com = k1a*(zeta*(k2a).^(1-kappa)+Vr[i])/phi2/k2a/c_slope
+        i2_constant = i2_com-1/phi2
+        i2_slope = i2_com*phi1
+
         # function f(d1x)
         #     d2_temp = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
         #     d2x = (alpha - d1x*k1a-d2_temp)/k2a;
-        #     return (zeta*k2a^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1))*k1a)*(alpha - d1x*k1a-d2x*k2a).^(-rho)*k2a
+        #     return (zeta*k2a^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1)))*(alpha - d1x*k1a-d2x*k2a).^(-rho)*k2a
             
         function f(d1x)
-            fc_slope = ((1-zeta)*k1a.^(1-kappa)-Vr[i])
-            fi2_com = k1a*(zeta*(k2a).^(1-kappa)+Vr[i])/phi2/k2a/fc_slope
-            fi2_constant = fi2_com-1/phi2
-            fi2_slope = fi2_com*phi1
-            d2x = fi2_slope*d1x+fi2_constant;
-            return (zeta*k2a^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1))*k1a)*(alpha - d1x*k1a-d2x*k2a).^(-rho)*k2a
+            d2x = i2_slope*d1x+i2_constant;
+            return (zeta*k2a^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1)))*(alpha - d1x*k1a-d2x*k2a).^(-rho)*k2a
         end
-        if rho == 1.0
-            c_slope = ((1-zeta)*k1a.^(1-kappa)-Vr[i])
-            i2_com = k1a*(zeta*(k2a).^(1-kappa)+Vr[i])/phi2/k2a/c_slope
-            i2_constant = i2_com-1/phi2
-            i2_slope = i2_com*phi1
+
+        if rho == 1.0 
             i1_RHS_slope = -k1a*c_slope
             i2_RHS_slope = -k2a*c_slope*i2_slope
             RHS_costant = c_slope*alpha-k2a*c_slope*i2_constant
@@ -558,40 +556,24 @@ function dstar_twocapitals!(d1::Array{Float64,2},
             RHS_slope = i1_RHS_slope +i2_RHS_slope - i1_LHS_slope
             d1_root = LHS_constant/RHS_slope
             d2_root = i2_slope*d1_root+i2_constant
-            # d2y = ((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root))/(delta*k1a).^(-1);
-            # d2_root = (alpha - d1_root*k1a-d2y)/k2a;
         else
-            
-            x0 = 0.03;
-            d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, xatol = 10e-12, xrtol = 10e-12, atol = 0, rtol = 0,  strict = true);
-            d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
-            d2_root = (alpha - d1_root*k1a-d2y)/k2a;
-            
+            x0 = 0.02;
+            d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, xatol = 0, xrtol = 0, atol = 0, rtol = 0, strict = true);
+            d2_root = i2_slope*d1_root+i2_constant;
         end
 
-        # function f(d1x)
-        #     d2_temp = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
-        #     d2x = (alpha - d1x*k1a-d2_temp)/k2a;
-        #     return (zeta*k2a.^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1))*k2a)*(alpha - d1x*k1a-d2x*k2a).^(-rho)
-        # end
-        # x0 = 0.02;
-        # d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, strict = true);
-        # d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root_c))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
-        # d2_root_c = (alpha - d1_root_c*k1a-d2y)/k2a;
+        x0 = 0.02;
+        d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, xatol = 0, xrtol = 0, atol = 0, rtol = 0, strict = true);
+        d2_root_c = i2_slope*d1_root_c+i2_constant;
 
-        # function f(d1x)
-        #     d2_temp = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*k1a)).^(-1);
-        #     d2x = (alpha - d1x*k1a-d2_temp)/k2a;
-        #     return (zeta*k2a.^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*k2a)*(alpha - d1x*k1a-d2x*k2a).^(-1)
-        # end
         # x0 = 0.03;
         # d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, strict = true);
         # d1_root_d = find_zero(f, x0, Roots.Order1(), maxiters = 10000000000, xatol = 10e-18, xrtol = 10e-18, atol = 10e-18, rtol = 10e-18, strict = true);
-        # d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root_c))/(delta*k1a)).^(-1);
+        # d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root_c))/(delta)).^(-1);
         # d2_root_c = (alpha - d1_root_c*k1a-d2y)/k2a;
         if i <10
-            println("root: ", d1_root, ", analytical root: ", f(d1_root))
-        #     println("1:", d1_root, ", 2:", d1_root_c,  ", 3:",d1_root_d, ", analytical root: ", f(d1_root),  ", numerical root: ",f(d1_root_c),  ", numerical root strict: ",f(d1_root_d))
+            # println("root: ", d1_root, ", analytical root: ", f(d1_root))
+            println("1:", d1_root, ", 2:", d1_root_c,", analytical root: ", f(d1_root),  ", numerical root: ",f(d1_root_c))
         end
         # println(d1_root - d1_root_c)
         # println(d2_root-d2_root_c)
@@ -993,7 +975,7 @@ function value_function_twocapitals(gamma::Float64,
       # INITIALIZATION                                                         #
       #========================================================================#
       for j=1:JJ
-         V0[:, j] = range(-1, stop=-1, length=II);
+         V0[:, j] = range(-3, stop=1, length=II);
       end
 
       v = copy(V0);

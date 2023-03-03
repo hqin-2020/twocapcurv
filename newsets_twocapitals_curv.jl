@@ -108,6 +108,7 @@ zeta = 0.5
 kappa = 0.0
 
 scale = 1.32
+scale = sqrt(1.754)
 sigma_k1 = scale*[.0048,               .0,   .0];
 sigma_k2 = scale*[.0              , .0048,   .0];
 sigma_z =  [.011*sqrt(.5)   , .011*sqrt(.5)   , .025];
@@ -117,9 +118,13 @@ eta2 = 0.013
 if symmetric_returns == 1
     beta1 = 0.01
     beta2 = 0.01
+    beta1 = 0.005
+    beta2 = 0.005
 else
     beta1 = 0.0
     beta2 = 0.01
+    beta1 = 0.0
+    beta2 = 0.005
 end
 
 delta = .002;
