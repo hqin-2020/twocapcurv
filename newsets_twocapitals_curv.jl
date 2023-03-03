@@ -182,6 +182,21 @@ d1 = (policies.d1_F + policies.d1_B)/2;
 d2 = (policies.d2_F + policies.d2_B)/2;
 h1, h2, hz = -h1_dist, -h2_dist, -hz_dist;
 
+
+r = range(rmin, stop=rmax, length=II);    # capital ratio vector
+rr = r * ones(1, JJ);
+pii = rr;
+IJ = II*JJ;
+k1a = zeros(II,JJ)
+k2a = zeros(II,JJ)
+for i=1:IJ
+    p = pii[i];
+    k1a[i] = (1-zeta + zeta*exp.(p*(1-kappa))).^(1/(kappa-1));
+    k2a[i] = ((1-zeta)*exp.(p*((kappa-1))) + zeta).^(1/(kappa-1));
+end
+d1k = d1.*k1a
+d2k = d2.*k2a
+
 # CSV.write(filename_ell*"d1.csv",  Tables.table(d1), writeheader=false)
 # CSV.write(filename_ell*"d2.csv",  Tables.table(d2), writeheader=false)
 # CSV.write(filename_ell*"h1.csv",  Tables.table(h1), writeheader=false)
@@ -192,6 +207,8 @@ results = Dict("delta" => delta,
 # Two capital stocks
 "eta1" => eta1, "eta2" => eta2, "a11"=> a11, 
 "beta1" => beta1, "beta2" => beta2,
+"k1a" => k1a, "k2a"=> k2a,
+"d1k" => d1k, "d2k"=> d2k,
 "sigma_k1" => sigma_k1, "sigma_k2" => sigma_k2,
 "sigma_z" =>  sigma_z, "alpha" => alpha, "kappa" => kappa,"zeta" => zeta, "phi1" => phi1, "phi2" => phi2,
 "I" => II, "J" => JJ,

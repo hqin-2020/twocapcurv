@@ -74,6 +74,10 @@ def read_csv(name):
     return h1
 d1 = read_csv('d1')
 d2 = read_csv('d2')
+d1k = read_csv('d1k')
+d2k = read_csv('d2k')
+k1a = read_csv('k1a')
+k2a = read_csv('k2a')
 h1 = read_csv('h1')
 h2 = read_csv('h2')
 hz = read_csv('hz')
@@ -190,6 +194,28 @@ fig.savefig(figname+'/d.png', dpi = 400)
 plt.close()
 
 fig, ax = plt.subplots(1,1,figsize = (4,4))
+sns.lineplot(data = d1k[0],label = r"$i_1/k_a$")
+sns.lineplot(data = d2k[0],label = r"$i_2/k_a$")
+ax.set_ylim([-0.01,0.05])
+ax.set_ylabel(r'$i/k_a$')
+ax.set_xlabel(r'$R$')
+ax.set_title(r'i/k_a, '+ '$\gamma=$'+str(gamma)+', '+'$\\rho$'+'='+str(rho))
+fig.tight_layout()
+fig.savefig(figname+'/ika.png', dpi = 400)
+plt.close()
+
+fig, ax = plt.subplots(1,1,figsize = (4,4))
+sns.lineplot(data = k1a[0],label = r"$k_1/k_a$")
+sns.lineplot(data = k2a[0],label = r"$k_2/k_a$")
+ax.set_ylim([-0.01,2.1])
+ax.set_ylabel(r'$k/k_a$')
+ax.set_xlabel(r'$R$')
+ax.set_title(r'k/k_a, '+ '$\gamma=$'+str(gamma)+', '+'$\\rho$'+'='+str(rho))
+fig.tight_layout()
+fig.savefig(figname+'/kka.png', dpi = 400)
+plt.close()
+
+fig, ax = plt.subplots(1,1,figsize = (4,4))
 sns.lineplot(data = V[0],label = r"$V$")
 if rho<1.01 and rho > 0.99 and gamma == 8.0 and plot_benchmark == True:
     sns.lineplot(data = Vb[0],label = r"$V, \rho =1$", ls = '--')
@@ -227,20 +253,54 @@ fig = make_subplots(rows=plot_row_dims, cols=plot_col_dims, horizontal_spacing=s
 fig.add_trace(go.Surface(z=res['d1'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[0], showscale=False, name= 'd1', showlegend=True), row = 1, col = 1)
 fig.add_trace(go.Surface(z=res['d2'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[1], showscale=False, name= 'd2', showlegend=True), row = 1, col = 1)
 fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='d', zaxis = dict(nticks=4, tickformat= ".4f")), row = 1, col = 1)
+fig.update_scenes(dict(aspectmode = 'cube'), row = 1, col = 1)
 
-fig.add_trace(go.Surface(z=res['cons'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[2], showscale=False, name= 'c', showlegend=True), row = 1, col = 2)
-fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='c', zaxis = dict(nticks=4, tickformat= ".4f")), row = 1, col = 2)
+fig.add_trace(go.Surface(z=res['d1k'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[0], showscale=False, name= 'i1/ka', showlegend=True), row = 1, col = 2)
+fig.add_trace(go.Surface(z=res['d2k'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[1], showscale=False, name= 'i2/ka', showlegend=True), row = 1, col = 2)
+fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='i/ka', zaxis = dict(nticks=4, tickformat= ".4f")), row = 1, col = 2)
 fig.update_scenes(dict(aspectmode = 'cube'), row = 1, col = 2)
 
-fig.add_trace(go.Surface(z=res['V'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[2], showscale=False, name= 'V', showlegend=True), row = 1, col = 3)
-fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='V', zaxis = dict(nticks=4, tickformat= ".2f")), row = 1, col = 3)
+fig.add_trace(go.Surface(z=res['cons'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[2], showscale=False, name= 'c', showlegend=True), row = 1, col = 3)
+fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='c', zaxis = dict(nticks=4, tickformat= ".4f")), row = 1, col = 3)
 fig.update_scenes(dict(aspectmode = 'cube'), row = 1, col = 3)
-fig.update_layout(title= 'Policy Function, Value Function <br><span style="font-size: 12px;"> gamma = '+ str(gamma)+', rho = '+ str(rho)+'</span>',\
+fig.update_layout(title= 'Policy Function, <br><span style="font-size: 12px;"> gamma = '+ str(gamma)+', rho = '+ str(rho)+'</span>',\
               title_x = 0.5, title_y = 0.97, height=500, width=1200, title_yanchor = 'top')
+fig.update_layout(margin=dict(t=75))
+fig.write_json(figname+"/3dc.json")
+fig.write_image(figname+"/3dc.png")
+        
+
+plot_row_dims      = 1
+plot_col_dims      = 2
+
+plot_color_style   = ['blues','reds', 'greens']
+
+subplot_titles = []
+subplot_types = []
+for row in range(plot_row_dims):
+    subplot_type = []
+    for col in range(plot_col_dims):
+        subplot_titles.append(var_name[col])
+        subplot_type.append({'type': 'surface'})
+    subplot_types.append(subplot_type)
+spacing = 0.1
+fig.add_trace(go.Surface(z=res['V'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[2], showscale=False, name= 'V', showlegend=True), row = 1, col = 1)
+fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='V', zaxis = dict(nticks=4, tickformat= ".2f")), row = 1, col = 1)
+fig.update_scenes(dict(aspectmode = 'cube'), row = 1, col = 1)
+
+fig = make_subplots(rows=plot_row_dims, cols=plot_col_dims, horizontal_spacing=spacing, vertical_spacing=spacing, subplot_titles=(subplot_titles), specs=subplot_types)
+fig.add_trace(go.Surface(z=res['k1a'].T, x=W1, y=W2, colorscale=plot_color_style[0], showscale=False, name= 'k1/ka', showlegend=True), row = 1, col = 2)
+fig.add_trace(go.Surface(z=res['k2a'].T, x=W1, y=W2, colorscale=plot_color_style[1], showscale=False, name= 'k2/ka', showlegend=True), row = 1, col = 2)
+fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='d', zaxis = dict(nticks=4, tickformat= ".4f")), row = 1, col = 2)
+fig.update_scenes(dict(aspectmode = 'cube'), row = 1, col = 2)
+
+
+fig.update_layout(title= 'Value Function, <br><span style="font-size: 12px;"> gamma = '+ str(gamma)+', rho = '+ str(rho)+'</span>',\
+              title_x = 0.5, title_y = 0.97, height=500, width=800, title_yanchor = 'top')
 fig.update_layout(margin=dict(t=75))
 fig.write_json(figname+"/3dw.json")
 fig.write_image(figname+"/3dw.png")
-        
+
 
 plot_row_dims      = 1
 plot_col_dims      = 3

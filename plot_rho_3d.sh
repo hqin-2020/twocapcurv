@@ -13,7 +13,7 @@ rhoarray=(1.0)
 gammaarray=(8.0)
 gammaarray=(1.01 2.0 3.0 4.0 5.0 6.0 7.0 8.0)
 
-symmetric=1
+symmetric=0
 
 for Delta in ${Deltaarray[@]}; do
     for fraction in "${fractionarray[@]}"; do
@@ -21,7 +21,7 @@ for Delta in ${Deltaarray[@]}; do
             for gamma in "${gammaarray[@]}"; do
                     count=0
 
-                    action_name="Standard_grid_sym_Delta_test"
+                    action_name="Standard_grid_asym_Delta_test"
 
                     dataname="${action_name}_${Delta}_frac_${fraction}"
 

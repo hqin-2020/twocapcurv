@@ -11,7 +11,7 @@ python_name="plot_rho_3d.py"
 
 rhoarray=(0.7 0.8 0.9 1.00001 1.1 1.2 1.3 1.4 1.5)
 # rhoarray=(1.0 1.00001 1.1 1.5)
-# rhoarray=(1.0)
+rhoarray=(1.0)
 
 gammaarray=(1.01 2.0 3.0 4.0 5.0 6.0 7.0 8.0)
 # gammaarray=(8.0)
