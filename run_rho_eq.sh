@@ -9,9 +9,9 @@ actiontime=1
 julia_name="newsets_twocapitals_curv.jl"
 python_name="plot_rho_3d.py"
 
-rhoarray=(0.7 0.8 0.9 1.00001 1.1 1.2 1.3 1.4 1.5)
+rhoarray=(0.67 0.7 0.8 0.9 1.00001 1.1 1.2 1.3 1.4 1.5)
 # rhoarray=(1.0 1.00001 1.1 1.5)
-rhoarray=(1.0)
+# rhoarray=(1.0)
 
 gammaarray=(1.01 2.0 3.0 4.0 5.0 6.0 7.0 8.0)
 # gammaarray=(8.0)
@@ -24,7 +24,7 @@ for Delta in ${Deltaarray[@]}; do
             for gamma in "${gammaarray[@]}"; do
                     count=0
 
-                    action_name="Standard_grid_asym_Delta_test"
+                    action_name="Standard_grid_asym_Delta_test_tol_0_12"
 
                     dataname="${action_name}_${Delta}_frac_${fraction}"
 

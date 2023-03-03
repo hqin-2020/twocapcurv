@@ -531,9 +531,17 @@ function dstar_twocapitals!(d1::Array{Float64,2},
         k1a = (1-zeta + zeta*exp.(p*(1-kappa))).^(1/(kappa-1));
         k2a = ((1-zeta)*exp.(p*(kappa-1)) + zeta).^(1/(kappa-1));
         
+        # function f(d1x)
+        #     d2_temp = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
+        #     d2x = (alpha - d1x*k1a-d2_temp)/k2a;
+        #     return (zeta*k2a^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1))*k1a)*(alpha - d1x*k1a-d2x*k2a).^(-rho)*k2a
+            
         function f(d1x)
-            d2_temp = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
-            d2x = (alpha - d1x*k1a-d2_temp)/k2a;
+            fc_slope = ((1-zeta)*k1a.^(1-kappa)-Vr[i])
+            fi2_com = k1a*(zeta*(k2a).^(1-kappa)+Vr[i])/phi2/k2a/fc_slope
+            fi2_constant = fi2_com-1/phi2
+            fi2_slope = fi2_com*phi1
+            d2x = fi2_slope*d1x+fi2_constant;
             return (zeta*k2a^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1))*k1a)*(alpha - d1x*k1a-d2x*k2a).^(-rho)*k2a
         end
         if rho == 1.0
@@ -555,9 +563,10 @@ function dstar_twocapitals!(d1::Array{Float64,2},
         else
             
             x0 = 0.03;
-            d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, xatol = 10e-15, xrtol = 10e-15, atol = 10e-15, rtol = 10e-15,  strict = true);
+            d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, xatol = 10e-12, xrtol = 10e-12, atol = 0, rtol = 0,  strict = true);
             d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
             d2_root = (alpha - d1_root*k1a-d2y)/k2a;
+            
         end
 
         # function f(d1x)
