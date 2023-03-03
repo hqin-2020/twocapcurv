@@ -532,14 +532,60 @@ function dstar_twocapitals!(d1::Array{Float64,2},
         k2a = ((1-zeta)*exp.(p*(kappa-1)) + zeta).^(1/(kappa-1));
         
         function f(d1x)
-            d2_temp = ((1-zeta)*(k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*exp.(V[i]*(rho-1))*k1a)).^rho;
+            d2_temp = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
             d2x = (alpha - d1x*k1a-d2_temp)/k2a;
             return (zeta*k2a^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1))*k1a)*(alpha - d1x*k1a-d2x*k2a).^(-rho)*k2a
         end
-        x0 = 0.03/2;
-        d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 1000000, strict = true);
-        d2y = ((1-zeta)*(k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root))/(delta*exp.(V[i]*(rho-1))*k1a)).^rho;
-        d2_root = (alpha - d1_root*k1a-d2y)/k2a;
+        if rho == 1.0
+            c_slope = ((1-zeta)*k1a.^(1-kappa)-Vr[i])
+            i2_com = k1a*(zeta*(k2a).^(1-kappa)+Vr[i])/phi2/k2a/c_slope
+            i2_constant = i2_com-1/phi2
+            i2_slope = i2_com*phi1
+            i1_RHS_slope = -k1a*c_slope
+            i2_RHS_slope = -k2a*c_slope*i2_slope
+            RHS_costant = c_slope*alpha-k2a*c_slope*i2_constant
+            i1_LHS_slope = phi1*delta*k1a
+            i1_LHS_constant = delta*k1a
+            LHS_constant = i1_LHS_constant - RHS_costant
+            RHS_slope = i1_RHS_slope +i2_RHS_slope - i1_LHS_slope
+            d1_root = LHS_constant/RHS_slope
+            d2_root = i2_slope*d1_root+i2_constant
+            # d2y = ((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root))/(delta*k1a).^(-1);
+            # d2_root = (alpha - d1_root*k1a-d2y)/k2a;
+        else
+            
+            x0 = 0.03;
+            d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, xatol = 10e-12, xrtol = 10e-12, atol = 10e-12, rtol = 10e-12,  strict = true);
+            d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
+            d2_root = (alpha - d1_root*k1a-d2y)/k2a;
+        end
+
+        # function f(d1x)
+        #     d2_temp = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
+        #     d2x = (alpha - d1x*k1a-d2_temp)/k2a;
+        #     return (zeta*k2a.^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*exp.(V[i]*(rho-1))*k2a)*(alpha - d1x*k1a-d2x*k2a).^(-rho)
+        # end
+        # x0 = 0.02;
+        # d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, strict = true);
+        # d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root_c))/(delta*exp.(V[i]*(rho-1))*k1a)).^(-1/rho);
+        # d2_root_c = (alpha - d1_root_c*k1a-d2y)/k2a;
+
+        # function f(d1x)
+        #     d2_temp = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1x))/(delta*k1a)).^(-1);
+        #     d2x = (alpha - d1x*k1a-d2_temp)/k2a;
+        #     return (zeta*k2a.^(1-kappa)+Vr[i])/(1+phi2*d2x)-(delta*k2a)*(alpha - d1x*k1a-d2x*k2a).^(-1)
+        # end
+        # x0 = 0.03;
+        # d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, strict = true);
+        # d1_root_d = find_zero(f, x0, Roots.Order1(), maxiters = 10000000000, xatol = 10e-18, xrtol = 10e-18, atol = 10e-18, rtol = 10e-18, strict = true);
+        # d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root_c))/(delta*k1a)).^(-1);
+        # d2_root_c = (alpha - d1_root_c*k1a-d2y)/k2a;
+        if i <10
+            println("root: ", d1_root, ", analytical root: ", f(d1_root))
+        #     println("1:", d1_root, ", 2:", d1_root_c,  ", 3:",d1_root_d, ", analytical root: ", f(d1_root),  ", numerical root: ",f(d1_root_c),  ", numerical root strict: ",f(d1_root_d))
+        end
+        # println(d1_root - d1_root_c)
+        # println(d2_root-d2_root_c)
         d1[i] = d1_root;
         d2[i] = d2_root;
         # d1old = copy(d1[i]);
@@ -747,8 +793,11 @@ function create_uu!(uu::Array{Float64, 1},
         #     c= 0.001
         # end
         penalty_term = (1-gamma)*(h1[i]^2 + h2[i]^2 + hz[i]^2)/2;
-
-        uu[i] = (delta/(1-rho)*(c.^(1-rho)*exp.((rho-1)*V[i])-1)+ penalty_term + mu_1[i]);
+        if rho == 1.0
+            uu[i] = (delta*log(c) + penalty_term + mu_1[i]);
+        else
+            uu[i] = (delta/(1-rho)*(c.^(1-rho)*exp.((rho-1)*V[i])-1)+ penalty_term + mu_1[i]);
+        end
     end
 
     nothing
@@ -870,6 +919,8 @@ function value_function_twocapitals(gamma::Float64,
       #========================================================================#
       # Value function and forward/backward finite difference matrices
       V, V0 = zeros(II, JJ), zeros(II, JJ);
+      c = zeros(II, JJ);
+
 
       # These matrices need to compute choices
       Vr_F, Vr_B = zeros(II, JJ), zeros(II, JJ);
@@ -879,8 +930,6 @@ function value_function_twocapitals(gamma::Float64,
       # Choice variables (capital ratio and worst-case drift)
       d1_F, d2_F = zeros(II, JJ), zeros(II, JJ);
       d1_B, d2_B = zeros(II, JJ), zeros(II, JJ);
-    #   d1_F, d2_F = 0.01*ones(II, JJ), 0.01*ones(II, JJ);
-    #   d1_B, d2_B = 0.01*ones(II, JJ), 0.01*ones(II, JJ);
       h1_F, h1_B  = zeros(II, JJ), zeros(II, JJ);
       h2_F, h2_B  = zeros(II, JJ), zeros(II, JJ);
       hz_F, hz_B  = zeros(II, JJ), zeros(II, JJ);
@@ -935,7 +984,7 @@ function value_function_twocapitals(gamma::Float64,
       # INITIALIZATION                                                         #
       #========================================================================#
       for j=1:JJ
-         V0[:, j] = range(-2, stop=-1, length=II);
+         V0[:, j] = range(-1, stop=-1, length=II);
       end
 
       v = copy(V0);
@@ -945,7 +994,11 @@ function value_function_twocapitals(gamma::Float64,
       # HAMILTON-JACOBI-BELLMAN EQUATION
       #========================================================================#
       mu_z = -a11*zz;
-      I_delta = sparse((1/Delta)*I, IJ, IJ);
+      if rho == 1.0
+        I_delta = sparse((1/Delta + delta)*I, IJ, IJ);
+      else
+        I_delta = sparse((1/Delta)*I, IJ, IJ);
+      end
 
 
       for n=1:maxit
@@ -992,9 +1045,9 @@ function value_function_twocapitals(gamma::Float64,
 	      # FLOW TERM
           if symmetric==1
             create_uu!(uu, gamma, rho, d1_F, d2_F, h1_F, h2_F, hz_F, mu_1_F, pii, zz, IJ, V, model);
-        elseif symmetric==0
+          elseif symmetric==0
             create_uu!(uu, gamma, rho, d1, d2, h1, h2, hz, mu_1, pii, zz, IJ, V, model);
-        end
+          end
           
 
           #CONSTRUCT MATRIX A
@@ -1047,8 +1100,16 @@ function value_function_twocapitals(gamma::Float64,
           println("v min = ",minimum(v));
           println("d1 max = ",maximum(d1));
           println("d1 min = ",minimum(d1));
+          println("d1F max = ",maximum(d1_F));
+          println("d1F min = ",minimum(d1_F));
+          println("d1B max = ",maximum(d1_B));
+          println("d1B min = ",minimum(d1_B));
           println("d2 max = ",maximum(d2));
           println("d2 min = ",minimum(d2));
+          println("d2F max = ",maximum(d2_F));
+          println("d2F min = ",minimum(d2_F));
+          println("d2B max = ",maximum(d2_B));
+          println("d2B min = ",minimum(d2_B));
           println("h1 max = ",maximum(h1));
           println("h1 min = ",minimum(h1));
           println("h2 max = ",maximum(h2));

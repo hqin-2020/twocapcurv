@@ -114,8 +114,13 @@ sigma_z =  [.011*sqrt(.5)   , .011*sqrt(.5)   , .025];
 
 eta1 = 0.013
 eta2 = 0.013
-beta1 = 0.01
-beta2 = 0.01
+if symmetric_returns == 1
+    beta1 = 0.01
+    beta2 = 0.01
+else
+    beta1 = 0.0
+    beta2 = 0.01
+end
 
 delta = .002;
 
@@ -124,8 +129,8 @@ phi2 = 28.0
 
 # (3) GRID
 II, JJ = 1001, 201;
-rmax = 20.;#log(20);
-rmin = -20.;#-log(20); 
+rmax = 18.;#log(20);
+rmin = -18.;#-log(20); 
 zmax = 1.;
 zmin = -zmax;
 
@@ -155,14 +160,14 @@ A, V, val, d1_F, d2_F, d1_B, d2_B, h1_F, h2_F, hz_F, h1_B, h2_B, hz_B,
         mu_1_F, mu_1_B, mu_r_F, mu_r_B, mu_z, c, V0, rr, zz, pii, dr, dz =
         value_function_twocapitals(gamma, rho, fraction, model, grid, params, symmetric_returns);
 println("=============================================================")
-println("Convegence time (minutes): ", times/60)
 end
+println("Convegence time (minutes): ", times/60)
 g_dist, g = stationary_distribution(A, grid)
 
 # Define Policies object
 policies  = PolicyFunctions(d1_F, d2_F, d1_B, d2_B,
-                            -h1_F/ell_star, -h2_F/ell_star, -hz_F/ell_star,
-                            -h1_B/ell_star, -h2_B/ell_star, -hz_B/ell_star);
+                            -h1_F, -h2_F, -hz_F,
+                            -h1_B, -h2_B, -hz_B);
 
 # Construct drift terms under the baseline
 mu_1 = (mu_1_F + mu_1_B)/2.;

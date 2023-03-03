@@ -1,7 +1,7 @@
 #! /bin/bash
 
 # Deltaarray=(0.005 0.001 0.01 0.1 1)
-Deltaarray=(10 300)
+Deltaarray=(300)
 fractionarray=(0.0)
 
 actiontime=1
@@ -9,13 +9,14 @@ actiontime=1
 julia_name="newsets_twocapitals_curv.jl"
 python_name="plot_rho_3d.py"
 
-# rhoarray=(0.7 0.8 0.9 1.00001 1.1 1.2 1.3 1.4 1.5)
-rhoarray=(1.00001 1.1 1.5)
+rhoarray=(0.7 0.8 0.9 1.00001 1.1 1.2 1.3 1.4 1.5)
+# rhoarray=(1.0 1.00001 1.1 1.5)
+# rhoarray=(1.0)
 
-# gammaarray=(1.01 2.0 3.0 4.0 5.0 6.0 7.0 8.0)
-gammaarray=(8.0)
+gammaarray=(1.01 2.0 3.0 4.0 5.0 6.0 7.0 8.0)
+# gammaarray=(8.0)
 
-symmetric=1
+symmetric=0
 
 for Delta in ${Deltaarray[@]}; do
     for fraction in "${fractionarray[@]}"; do
@@ -23,7 +24,7 @@ for Delta in ${Deltaarray[@]}; do
             for gamma in "${gammaarray[@]}"; do
                     count=0
 
-                    action_name="Standard_grid_sym_Delta_test"
+                    action_name="Standard_grid_asym_Delta_test"
 
                     dataname="${action_name}_${Delta}_frac_${fraction}"
 

@@ -1,16 +1,17 @@
 #! /bin/bash
 
-Deltaarray=(5 10 20 50 100 150 300)
+Deltaarray=(300)
 fractionarray=(0.0)
 
 actiontime=1
 
-python_name="plot_rho_moregrid.py"
+python_name="plot_rho_3d.py"
 
 rhoarray=(0.7 0.8 0.9 1.00001 1.1 1.2 1.3 1.4 1.5)
-rhoarray=(1.00001)
+rhoarray=(1.0)
+
 gammaarray=(8.0)
-gammaarray=(1.01 1.05 1.1 1.5 2.0 4.0 5.0 8.0)
+gammaarray=(1.01 2.0 3.0 4.0 5.0 6.0 7.0 8.0)
 
 symmetric=1
 
@@ -20,7 +21,7 @@ for Delta in ${Deltaarray[@]}; do
             for gamma in "${gammaarray[@]}"; do
                     count=0
 
-                    action_name="TwoCapital_julia_rhoas_standard_grids0"
+                    action_name="Standard_grid_sym_Delta_test"
 
                     dataname="${action_name}_${Delta}_frac_${fraction}"
 
@@ -48,7 +49,7 @@ for Delta in ${Deltaarray[@]}; do
 #SBATCH --mem=3G
 
 module load python/anaconda-2020.11
-python3 /project/lhansen/twocapsim/$python_name  --Delta ${Delta} --fraction ${fraction} --gamma ${gamma} --rho ${rho} --symmetric ${symmetric} --dataname ${dataname}
+python3 /project/lhansen/twocapcurv/$python_name  --Delta ${Delta} --fraction ${fraction} --gamma ${gamma} --rho ${rho} --symmetric ${symmetric} --dataname ${dataname}
 EOF
                 count=$(($count + 1))
                 sbatch ./bash/${action_name}/Delta_${Delta}_frac_${fraction}/rho_${rho}_gamma_${gamma}_plot.sh

@@ -106,7 +106,7 @@ if rho<1.01 and rho > 0.99 and gamma == 8.0 and plot_benchmark == True:
     g_Rb = (g_Rb*rscale).iloc[1:]/newinterval
     sns.lineplot(data = g_Rb,label = r"$g_R, \rho =1$", ls = '--')
 
-ax.set_ylim([0.0,4.0])
+ax.set_ylim([0.0,5.0])
 ax.set_ylabel(r'$g_R$')
 ax.set_xlabel(r'$R$')
 ax.set_title(r'R density, '+ '$\gamma=$'+str(gamma)+', '+'$\\rho$ ='+str(rho))
@@ -119,7 +119,7 @@ fig, ax = plt.subplots(1,1,figsize = (4,4))
 g_R = g.sum(axis=1)*0.01
 g_Rc = g_R/transderi(np.linspace(-llim,llim,lgrid))
 sns.lineplot(data = g_Rc,label = r"$g_R$")
-ax.set_ylim([0.0,4.0])
+ax.set_ylim([0.0,5.0])
 ax.set_ylabel(r'$g_R$')
 ax.set_xlabel(r'$R$')
 ax.set_title(r'R density (change of variable), '+ '$\gamma=$'+str(gamma)+', '+'$\\rho$ ='+str(rho))
@@ -139,7 +139,7 @@ if rho<1.01 and rho > 0.99 and gamma == 8.0 and plot_benchmark == True:
     glb.columns = np.linspace(-1,1,201)
     g_lb = glb.sum(axis=1)*0.01
     sns.lineplot(data = g_lb,label = r"$g_l, \rho =1$", ls = '--')
-ax.set_ylim([0.0,0.5])
+ax.set_ylim([0.0,1.0])
 ax.set_ylabel(r'$g_l$')
 ax.set_xlabel(r'$l$')
 ax.set_title(r'l density, '+ '$\gamma=$'+str(gamma)+', '+'$\\rho$ ='+str(rho))
@@ -180,7 +180,7 @@ sns.lineplot(data = d2[0],label = r"$d_2$")
 if rho<1.01 and rho > 0.99 and gamma == 8.0 and plot_benchmark == True:
     sns.lineplot(data = d1b[0],label = r"$d_1, \rho =1$", ls = '--')
     sns.lineplot(data = d2b[0],label = r"$d_2, \rho =1$", ls = '--')
-ax.set_ylim([0.027,0.037])
+ax.set_ylim([0.01,0.05])
 # ax.set_ylim([-0.01,0.05])
 ax.set_ylabel(r'$d$')
 ax.set_xlabel(r'$R$')
@@ -224,15 +224,15 @@ for row in range(plot_row_dims):
     subplot_types.append(subplot_type)
 spacing = 0.1
 fig = make_subplots(rows=plot_row_dims, cols=plot_col_dims, horizontal_spacing=spacing, vertical_spacing=spacing, subplot_titles=(subplot_titles), specs=subplot_types)
-fig.add_trace(go.Surface(z=res['d1'].T[5:-5,5:-5], x=W1, y=W2, colorscale=plot_color_style[0], showscale=False, name= 'd1', showlegend=True), row = 1, col = 1)
-fig.add_trace(go.Surface(z=res['d2'].T[5:-5,5:-5], x=W1, y=W2, colorscale=plot_color_style[1], showscale=False, name= 'd2', showlegend=True), row = 1, col = 1)
+fig.add_trace(go.Surface(z=res['d1'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[0], showscale=False, name= 'd1', showlegend=True), row = 1, col = 1)
+fig.add_trace(go.Surface(z=res['d2'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[1], showscale=False, name= 'd2', showlegend=True), row = 1, col = 1)
 fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='d', zaxis = dict(nticks=4, tickformat= ".4f")), row = 1, col = 1)
 
-fig.add_trace(go.Surface(z=res['cons'].T[5:-5,5:-5], x=W1, y=W2, colorscale=plot_color_style[2], showscale=False, name= 'c', showlegend=True), row = 1, col = 2)
+fig.add_trace(go.Surface(z=res['cons'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[2], showscale=False, name= 'c', showlegend=True), row = 1, col = 2)
 fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='c', zaxis = dict(nticks=4, tickformat= ".4f")), row = 1, col = 2)
 fig.update_scenes(dict(aspectmode = 'cube'), row = 1, col = 2)
 
-fig.add_trace(go.Surface(z=res['V'].T[5:-5,5:-5], x=W1, y=W2, colorscale=plot_color_style[2], showscale=False, name= 'V', showlegend=True), row = 1, col = 3)
+fig.add_trace(go.Surface(z=res['V'].T[10:-10,10:-10], x=W1, y=W2, colorscale=plot_color_style[2], showscale=False, name= 'V', showlegend=True), row = 1, col = 3)
 fig.update_scenes(dict(xaxis_title='r', yaxis_title='z', zaxis_title='V', zaxis = dict(nticks=4, tickformat= ".2f")), row = 1, col = 3)
 fig.update_scenes(dict(aspectmode = 'cube'), row = 1, col = 3)
 fig.update_layout(title= 'Policy Function, Value Function <br><span style="font-size: 12px;"> gamma = '+ str(gamma)+', rho = '+ str(rho)+'</span>',\
