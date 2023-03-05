@@ -558,7 +558,7 @@ function dstar_twocapitals!(d1::Array{Float64,2},
             d2_root = i2_slope*d1_root+i2_constant
         else
             x0 = 0.02178;
-            d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 100000000,xatol = 10e-21, xrtol = 10e-21, atol = 10e-21, rtol = 10e-21, strict = true);
+            d1_root = find_zero(f, x0, Roots.Order1(), maxiters = 1000000000000000000,xatol = 0, xrtol = 0, atol = 10e-15, rtol = 0, strict = true);
             d2_root = i2_slope*d1_root+i2_constant;
         end
 
@@ -566,7 +566,7 @@ function dstar_twocapitals!(d1::Array{Float64,2},
         # # d1_root_c = find_zero(f, (0.01, 0.02), Bisection(), maxiters = 10000000000, xatol = 10e-24, xrtol = 10e-24, atol = 10e-24, rtol = 10e-24, strict = true);
         # # d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, xatol = 10e-24, xrtol = 10e-24, atol = 10e-24, rtol = 10e-24, strict = true);
         # # d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, strict = true);
-        # d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 100000000, xatol = 10e-15, xrtol = 10e-15, atol = 10e-18, rtol = 10e-18, strict = true);
+        d1_root_c = find_zero(f, x0, Roots.Order1(), maxiters = 1000000000000000000,xatol = 0, xrtol = 0, atol = 10e-15, rtol = 0, strict = true);
 
         # d2_root_c = i2_slope*d1_root_c+i2_constant;
 
@@ -575,7 +575,17 @@ function dstar_twocapitals!(d1::Array{Float64,2},
         # d1_root_d = find_zero(f, x0, Roots.Order1(), maxiters = 10000000000, xatol = 10e-18, xrtol = 10e-18, atol = 10e-18, rtol = 10e-18, strict = true);
         # d2y = (((1-zeta) * k1a.^(1-kappa)-Vr[i])*(1/(1+phi1*d1_root_c))/(delta)).^(-1);
         # d2_root_c = (alpha - d1_root_c*k1a-d2y)/k2a;
-        if i <30000
+        if d1_root > 0.1
+            d1_root = 0.02
+        elseif d1_root < 0
+            d1_root = 0.02
+        end
+        if d2_root > 0.1
+            d2_root = 0.02
+        elseif d2_root < 0
+            d2_root = 0.02
+        end
+        if 29000<i <30000
             # println("root: ", d1_root, ", analytical root: ", f(d1_root))
             println(i, ", root: ", d1_root, ", numerical root: ", f(d1_root))
             # println(i, ", 1:", d1_root, ", 2:", d1_root_c,", analytical root: ", f(d1_root),  ", numerical root: ",f(d1_root_c))
@@ -984,7 +994,6 @@ function value_function_twocapitals(gamma::Float64,
         #  V0[:, j] = range(-3, stop=-3, length=II);
         #  V0[:, j] = range(-12, stop=1, length=II);
         end
-    #   V0 = npzread("/project/lhansen/twocapbal/output/Standard_grid_asym_Delta_300_scale_1754_tol_21_15_300_frac_0.0/gamma_8.0_rho_1.00001/model_asym_HS.npz")["V"]
       v = copy(V0);
       distance = zeros(maxit);
 

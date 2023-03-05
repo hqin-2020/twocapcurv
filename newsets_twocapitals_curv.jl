@@ -142,6 +142,7 @@ rmin = -18.;#-log(20);
 # rmax = 3.;#log(20);
 # rmin = -3.;#-log(20); 
 zmax = 1.;
+# zmax = 0.5;
 zmin = -zmax;
 
 # (4) Iteration parameters
