@@ -108,9 +108,12 @@ zeta = 0.5
 kappa = 0.0
 
 scale = 1.32
-scale = sqrt(1.754)
 sigma_k1 = scale*[.0048,               .0,   .0];
 sigma_k2 = scale*[.0              , .0048,   .0];
+
+scale = sqrt(1.754)
+sigma_k1 = scale*[.00477,               .0,   .0];
+sigma_k2 = scale*[.0              , .00477,   .0];
 sigma_z =  [.011*sqrt(.5)   , .011*sqrt(.5)   , .025];
 
 eta1 = 0.013
@@ -136,6 +139,8 @@ phi2 = 28.0
 II, JJ = 1001, 201;
 rmax = 18.;#log(20);
 rmin = -18.;#-log(20); 
+# rmax = 3.;#log(20);
+# rmin = -3.;#-log(20); 
 zmax = 1.;
 zmin = -zmax;
 
